@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-type ScheduleItem = {
+type Item = {
   place: string;
   coords: [number, number];
 };
@@ -14,7 +14,10 @@ export default function Dashboard() {
 
   const [input, setInput] = useState("");
 
-  const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
+  const [schedule, setSchedule] = useState<Item[]>([
+    { place: "공항", coords: [42.7752, 141.6923] },
+    { place: "오타루", coords: [43.1907, 140.9944] },
+  ]);
 
   const placeMap: Record<string, [number, number]> = {
     공항: [42.7752, 141.6923],
@@ -22,18 +25,6 @@ export default function Dashboard() {
     운하: [43.1956, 140.9947],
   };
 
-  // ✔ 로컬 저장 불러오기 (새로고침 유지)
-  useEffect(() => {
-    const saved = localStorage.getItem("schedule");
-    if (saved) setSchedule(JSON.parse(saved));
-  }, []);
-
-  // ✔ 변경될 때마다 저장
-  useEffect(() => {
-    localStorage.setItem("schedule", JSON.stringify(schedule));
-  }, [schedule]);
-
-  // ✔ 지도 초기화
   useEffect(() => {
     const init = async () => {
       if (!mapRef.current || mapInstance.current) return;
@@ -59,7 +50,6 @@ export default function Dashboard() {
     };
   }, []);
 
-  // ✔ 마커 + 경로
   useEffect(() => {
     if (!mapInstance.current || !LRef.current) return;
 
@@ -74,9 +64,7 @@ export default function Dashboard() {
 
     const points = schedule.map((s) => s.coords);
 
-    points.forEach((p) => {
-      L.marker(p).addTo(map);
-    });
+    points.forEach((p) => L.marker(p).addTo(map));
 
     if (points.length > 1) {
       L.polyline(points, { color: "blue" }).addTo(map);
@@ -85,14 +73,14 @@ export default function Dashboard() {
 
   return (
     <div className="app">
-      {/* 상단 */}
+      {/* HEADER */}
       <div className="header">✈ 여행 대시보드</div>
 
-      {/* 본문 */}
+      {/* BODY */}
       <div className="body">
-        {/* 좌측 */}
+        {/* LEFT */}
         <div className="panel">
-          <h3>여행 일정</h3>
+          <div className="title">일정</div>
 
           <input
             value={input}
@@ -112,37 +100,38 @@ export default function Dashboard() {
                 setInput("");
               }
             }}
-            className="input"
           />
 
-          <ul>
+          <div className="list">
             {schedule.map((s, i) => (
-              <li key={i}>{s.place}</li>
+              <div key={i} className="item">
+                {s.place}
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
 
-        {/* 지도 */}
+        {/* MAP */}
         <div ref={mapRef} className="map" />
       </div>
 
-      {/* 하단바 */}
-      <div className="bottomNav">
-        <div>🏠 홈</div>
-        <div>🗺 지도</div>
-        <div>📍 일정</div>
+      {/* BOTTOM NAV */}
+      <div className="bottom">
+        <div>홈</div>
+        <div>지도</div>
+        <div>일정</div>
       </div>
 
-      {/* 스타일 */}
       <style jsx>{`
         .app {
           height: 100vh;
           display: flex;
           flex-direction: column;
+          font-family: sans-serif;
         }
 
         .header {
-          height: 50px;
+          height: 52px;
           display: flex;
           align-items: center;
           padding: 0 12px;
@@ -162,25 +151,34 @@ export default function Dashboard() {
           overflow-y: auto;
         }
 
-        .input {
+        .title {
+          font-weight: bold;
+          margin-bottom: 10px;
+        }
+
+        input {
           width: 100%;
           padding: 8px;
-          margin-bottom: 10px;
+          margin-bottom: 12px;
+        }
+
+        .item {
+          padding: 6px 0;
+          border-bottom: 1px solid #eee;
         }
 
         .map {
           flex: 1;
         }
 
-        .bottomNav {
-          height: 55px;
+        .bottom {
+          height: 54px;
           display: flex;
           justify-content: space-around;
           align-items: center;
           border-top: 1px solid #ddd;
         }
 
-        /* 모바일 대응 */
         @media (max-width: 768px) {
           .body {
             flex-direction: column;
