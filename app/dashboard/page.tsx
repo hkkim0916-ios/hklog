@@ -1,10 +1,16 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function Dashboard() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
+
+  const [schedule] = useState([
+    { place: "공항", coords: [42.7752, 141.6923] },
+    { place: "오타루", coords: [43.1907, 140.9944] },
+    { place: "운하", coords: [43.1956, 140.9947] },
+  ]);
 
   useEffect(() => {
     let L: any;
@@ -22,8 +28,14 @@ export default function Dashboard() {
         attribution: "© OpenStreetMap",
       }).addTo(map);
 
-      // 기본 마커 1개 (테스트용)
-      L.marker([43.06, 141.35]).addTo(map);
+      // 마커 + 경로
+      const points = schedule.map((s) => s.coords);
+
+      points.forEach((p) => {
+        L.marker(p).addTo(map);
+      });
+
+      L.polyline(points, { color: "blue" }).addTo(map);
     };
 
     initMap();
@@ -32,30 +44,29 @@ export default function Dashboard() {
       mapInstance.current?.remove();
       mapInstance.current = null;
     };
-  }, []);
+  }, [schedule]);
 
   return (
-    <div style={{ height: "100vh", width: "100%" }}>
-      {/* 상단 */}
+    <div style={{ display: "flex", height: "100vh" }}>
+      {/* 왼쪽 일정 */}
       <div
         style={{
-          padding: 12,
-          fontWeight: 600,
-          background: "#111",
-          color: "#fff",
+          width: "280px",
+          padding: 16,
+          borderRight: "1px solid #ddd",
         }}
       >
-        여행 대시보드
+        <h2>여행 일정</h2>
+
+        <ul style={{ paddingLeft: 16 }}>
+          {schedule.map((item, i) => (
+            <li key={i}>{item.place}</li>
+          ))}
+        </ul>
       </div>
 
       {/* 지도 */}
-      <div
-        ref={mapRef}
-        style={{
-          height: "calc(100vh - 48px)",
-          width: "100%",
-        }}
-      />
+      <div style={{ flex: 1 }} ref={mapRef} />
     </div>
   );
 }
